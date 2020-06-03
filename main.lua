@@ -272,9 +272,9 @@ function love.keypressed(key)
     end 
     if gameState == 'start' then
         if key == '1' then
-            player1.ai = not player1.ai
+            player1:next_ai_state()
         elseif key == '2' then
-            player2.ai = not player2.ai
+            player2:next_ai_state()
         end
     end
 end
@@ -295,17 +295,21 @@ function love.draw()
 
     if player1.ai then
         love.graphics.setFont(largeFont)
-        love.graphics.printf('AI', 0, 10, VIRTUAL_WIDTH / 2, 'center')
+        love.graphics.printf('AI', 0, 20, VIRTUAL_WIDTH / 2, 'center')
+        love.graphics.setFont(smallFont)
+        love.graphics.printf(player1.ai_difficulty, 0, 10, VIRTUAL_WIDTH / 2, 'center')
     end
     if player2.ai then
         love.graphics.setFont(largeFont)
-        love.graphics.printf('AI', VIRTUAL_WIDTH / 2, 10, VIRTUAL_WIDTH / 2, 'center')
+        love.graphics.printf('AI', VIRTUAL_WIDTH / 2, 20, VIRTUAL_WIDTH / 2, 'center')
+        love.graphics.setFont(smallFont)
+        love.graphics.printf(player2.ai_difficulty, VIRTUAL_WIDTH / 2, 10, VIRTUAL_WIDTH / 2, 'center')
     end
     if gameState == 'start' then
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Press \'1\' or \'2\' to set Player 1 or Player 2 as AI', 0, 30, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press \'1\' or \'2\' to set Player 1 or Player 2 as AI and change difficulty', 0, VIRTUAL_HEIGHT - 40, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         love.graphics.setFont(smallFont)
         love.graphics.printf('Player ' .. tostring(servingPlayer) .. "'s serve!", 

@@ -34,46 +34,76 @@ function Paddle:init(x, y, width, height, side)
     self.height = height
     self.dy = 0
     self.ai = false
+    self.ai_difficulty = 'easy'  -- 'easy', 'hard', 'impossible'
     self.side = side  -- 'left' or 'right'
 end
 
+function Paddle:next_ai_state()
+    if not self.ai then
+        self.ai = true
+        self.ai_difficulty = 'easy'
+    elseif self.ai_difficulty == 'easy' then
+        self.ai_difficulty = 'med'
+    elseif self.ai_difficulty == 'med' then
+        self.ai_difficulty = 'hard'
+    elseif self.ai_difficulty == 'hard' then
+        self.ai_difficulty = 'impossible'
+    elseif self.ai_difficulty == 'impossible' then
+        self.ai = false
+    end
+end
+
 function Paddle:ai_update(ball)
-    mult = self.side == 'left' and 1 or -1
-    if (mult * ball.dx > 0) then
-        -- go to middle
-        if self.y + self.height / 2 + 2 < VIRTUAL_HEIGHT / 2 then
-            self.dy = PADDLE_SPEED
-        elseif self.y + self.height / 2 - 2 > VIRTUAL_HEIGHT / 2 then
-            self.dy = -PADDLE_SPEED
+    if self.ai_difficulty == 'easy' then
+        -- track ball
+        if self.y + self.height / 2 + 2 < ball.y + ball.height / 2 then
+            self.dy = PADDLE_SPEED / 2
+        elseif self.y + self.height / 2 - 2 > ball.y + ball.height / 2 then
+            self.dy = -PADDLE_SPEED / 2
         else
             self.dy = 0
         end
-    else
-        -- compute ball destination and go there
-        -- uses slope-point equation of a line
-        y_dest = (ball.dy / ball.dx) * (self.x - ball.x) + ball.y
-        -- check bounce
-        if y_dest < 0 then
-            y_dest = -y_dest
-            if y_dest > VIRTUAL_HEIGHT then
-                y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
+    else  -- ai_difficulty is 'med', 'hard' or 'impossible'
+        mult = self.side == 'left' and 1 or -1
+        if (mult * ball.dx > 0) then
+            -- go to middle
+            if self.y + self.height / 2 + 2 < VIRTUAL_HEIGHT / 2 then
+                self.dy = PADDLE_SPEED
+            elseif self.y + self.height / 2 - 2 > VIRTUAL_HEIGHT / 2 then
+                self.dy = -PADDLE_SPEED
+            else
+                self.dy = 0
             end
-        end
-        if y_dest > VIRTUAL_HEIGHT then
-            y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
-            if y_dest < 0 then
-                y_dest = -y_dest
-            end
-        end
-        -- center the paddle
-        y_dest = y_dest - self.height / 2 + 1
-        -- set speed
-        if self.y + 2 < y_dest then
-            self.dy = PADDLE_SPEED
-        elseif self.y - 2 > y_dest then
-            self.dy = -PADDLE_SPEED
         else
-            self.dy = 0
+            -- compute ball destination and go there
+            -- uses slope-point equation of a line
+            y_dest = (ball.dy / ball.dx) * (self.x - ball.x) + ball.y
+            if self.ai_difficulty == 'impossible' then
+                -- check bounce
+                if y_dest < 0 then
+                    y_dest = -y_dest
+                    if y_dest > VIRTUAL_HEIGHT then
+                        y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
+                    end
+                end
+                if y_dest > VIRTUAL_HEIGHT then
+                    y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
+                    if y_dest < 0 then
+                        y_dest = -y_dest
+                    end
+                end
+            end
+            -- center the paddle
+            y_dest = y_dest - self.height / 2 + 1
+            -- set speed
+            SET_SPEED = PADDLE_SPEED / (self.ai_difficulty == 'impossible' and 1 or 2)
+            if self.y + 2 < y_dest then
+                self.dy = SET_SPEED
+            elseif self.y - 2 > y_dest then
+                self.dy = -SET_SPEED
+            else
+                self.dy = 0
+            end
         end
     end
 end
