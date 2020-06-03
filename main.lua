@@ -95,8 +95,8 @@ function love.load()
     servingPlayer = 1
 
     -- initialize player paddles and ball
-    player1 = Paddle(10, 30, 5, 20)
-    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20)
+    player1 = Paddle(10, 30, 5, 20, 'left')
+    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20, 'right')
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
 
     gameState = 'start'
@@ -210,6 +210,9 @@ function love.update(dt)
     else
         player1.dy = 0
     end
+    if player1.ai then
+        player1:ai_update(ball)
+    end
 
     -- player 2 movement
     if love.keyboard.isDown('up') then
@@ -218,6 +221,9 @@ function love.update(dt)
         player2.dy = PADDLE_SPEED
     else
         player2.dy = 0
+    end
+    if player2.ai then
+        player2:ai_update(ball)
     end
 
     -- update our ball based on its DX and DY only if we're in play state;
@@ -263,6 +269,13 @@ function love.keypressed(key)
                 servingPlayer = 1
             end
         end
+    end 
+    if gameState == 'start' then
+        if key == '1' then
+            player1.ai = not player1.ai
+        elseif key == '2' then
+            player2.ai = not player2.ai
+        end
     end
 end
 
@@ -278,14 +291,21 @@ function love.draw()
     -- to some versions of the original Pong
     love.graphics.clear(40/255, 45/255, 52/255, 255/255)
 
-    love.graphics.setFont(smallFont)
-
     displayScore()
 
+    if player1.ai then
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('AI', 0, 10, VIRTUAL_WIDTH / 2, 'center')
+    end
+    if player2.ai then
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('AI', VIRTUAL_WIDTH / 2, 10, VIRTUAL_WIDTH / 2, 'center')
+    end
     if gameState == 'start' then
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press \'1\' or \'2\' to set Player 1 or Player 2 as AI', 0, 30, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         love.graphics.setFont(smallFont)
         love.graphics.printf('Player ' .. tostring(servingPlayer) .. "'s serve!", 

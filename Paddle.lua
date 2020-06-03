@@ -27,12 +27,55 @@ Paddle = Class{}
     have their own x, y, width, and height values, thus serving as containers
     for data. In this sense, they're very similar to structs in C.
 ]]
-function Paddle:init(x, y, width, height)
+function Paddle:init(x, y, width, height, side)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
     self.dy = 0
+    self.ai = false
+    self.side = side  -- 'left' or 'right'
+end
+
+function Paddle:ai_update(ball)
+    mult = self.side == 'left' and 1 or -1
+    if (mult * ball.dx > 0) then
+        -- go to middle
+        if self.y + self.height / 2 + 2 < VIRTUAL_HEIGHT / 2 then
+            self.dy = PADDLE_SPEED
+        elseif self.y + self.height / 2 - 2 > VIRTUAL_HEIGHT / 2 then
+            self.dy = -PADDLE_SPEED
+        else
+            self.dy = 0
+        end
+    else
+        -- compute ball destination and go there
+        -- uses slope-point equation of a line
+        y_dest = (ball.dy / ball.dx) * (self.x - ball.x) + ball.y
+        -- check bounce
+        if y_dest < 0 then
+            y_dest = -y_dest
+            if y_dest > VIRTUAL_HEIGHT then
+                y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
+            end
+        end
+        if y_dest > VIRTUAL_HEIGHT then
+            y_dest = 2 * VIRTUAL_HEIGHT - y_dest - ball.height
+            if y_dest < 0 then
+                y_dest = -y_dest
+            end
+        end
+        -- center the paddle
+        y_dest = y_dest - self.height / 2 + 1
+        -- set speed
+        if self.y + 2 < y_dest then
+            self.dy = PADDLE_SPEED
+        elseif self.y - 2 > y_dest then
+            self.dy = -PADDLE_SPEED
+        else
+            self.dy = 0
+        end
+    end
 end
 
 function Paddle:update(dt)
