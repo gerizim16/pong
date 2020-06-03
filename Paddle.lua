@@ -38,6 +38,16 @@ function Paddle:init(x, y, width, height, side)
     self.side = side  -- 'left' or 'right'
 end
 
+--[[
+    difficulty  description                 speed
+    easy        tracks ball                 PADDLE_SPEED / 2
+    med         computes ball position      PADDLE_SPEED / 2
+                without bounce
+    hard        computes ball position      PADDLE_SPEED / 2
+                with bounce
+    impossible  computes ball position      PADDLE_SPEED
+                with bounce
+ ]]
 function Paddle:next_ai_state()
     if not self.ai then
         self.ai = true
@@ -54,12 +64,16 @@ function Paddle:next_ai_state()
 end
 
 function Paddle:ai_update(ball)
+    SET_SPEED = PADDLE_SPEED
+    if self.ai_difficulty ~= 'impossible' then
+        SET_SPEED = PADDLE_SPEED / 2
+    end
     if self.ai_difficulty == 'easy' then
         -- track ball
         if self.y + self.height / 2 + 2 < ball.y + ball.height / 2 then
-            self.dy = PADDLE_SPEED / 2
+            self.dy = SET_SPEED
         elseif self.y + self.height / 2 - 2 > ball.y + ball.height / 2 then
-            self.dy = -PADDLE_SPEED / 2
+            self.dy = -SET_SPEED
         else
             self.dy = 0
         end
@@ -68,9 +82,9 @@ function Paddle:ai_update(ball)
         if (mult * ball.dx > 0) then
             -- go to middle
             if self.y + self.height / 2 + 2 < VIRTUAL_HEIGHT / 2 then
-                self.dy = PADDLE_SPEED
+                self.dy = SET_SPEED
             elseif self.y + self.height / 2 - 2 > VIRTUAL_HEIGHT / 2 then
-                self.dy = -PADDLE_SPEED
+                self.dy = -SET_SPEED
             else
                 self.dy = 0
             end
@@ -78,7 +92,7 @@ function Paddle:ai_update(ball)
             -- compute ball destination and go there
             -- uses slope-point equation of a line
             y_dest = (ball.dy / ball.dx) * (self.x - ball.x) + ball.y
-            if self.ai_difficulty == 'impossible' then
+            if self.ai_difficulty ~= 'med' then
                 -- check bounce
                 if y_dest < 0 then
                     y_dest = -y_dest
@@ -96,7 +110,6 @@ function Paddle:ai_update(ball)
             -- center the paddle
             y_dest = y_dest - self.height / 2 + 1
             -- set speed
-            SET_SPEED = PADDLE_SPEED / (self.ai_difficulty == 'impossible' and 1 or 2)
             if self.y + 2 < y_dest then
                 self.dy = SET_SPEED
             elseif self.y - 2 > y_dest then
